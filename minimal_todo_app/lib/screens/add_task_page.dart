@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
@@ -35,44 +36,105 @@ class _AddTaskPageState extends State<AddTaskPage> {
     Navigator.of(context).pop();
   }
 
-  // Datepicker
-  Future<void> _selectDate() async {
-    final DateTime? pickedDate = await showDatePicker(
+    // Datepicker
+  void _selectDate() {
+    showModalBottomSheet(
       context: context,
-      initialDate: selectedDateTime,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
-    );
-    if (pickedDate != null) {
-      setState(() {
-        selectedDateTime = DateTime(
-          pickedDate.year,
-          pickedDate.month,
-          pickedDate.day,
-          selectedDateTime.hour,
-          selectedDateTime.minute,
+      builder: (BuildContext context) {
+        return Container(
+          height: 300,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  'Select Date',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: CupertinoDatePicker(
+                  initialDateTime: selectedDateTime,
+                  mode: CupertinoDatePickerMode.date,
+                  onDateTimeChanged: (DateTime newDate) {
+                    setState(() {
+                      selectedDateTime = DateTime(
+                        newDate.year,
+                        newDate.month,
+                        newDate.day,
+                        selectedDateTime.hour,
+                        selectedDateTime.minute,
+                      );
+                    });
+                  },
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text('Done'),
+              ),
+            ],
+          ),
         );
-      });
-    }
+      },
+    );
   }
 
   // Timepicker
-  Future<void> _selectTime() async {
-    final TimeOfDay? pickedTime = await showTimePicker(
+  void _selectTime() {
+    showModalBottomSheet(
       context: context,
-      initialTime: TimeOfDay.fromDateTime(selectedDateTime),
-    );
-    if (pickedTime != null) {
-      setState(() {
-        selectedDateTime = DateTime(
-          selectedDateTime.year,
-          selectedDateTime.month,
-          selectedDateTime.day,
-          pickedTime.hour,
-          pickedTime.minute,
+      builder: (BuildContext context) {
+        return Container(
+          height: 250,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  'Select Time',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: CupertinoTimerPicker(
+                  mode: CupertinoTimerPickerMode.hm,
+                  initialTimerDuration: Duration(
+                    hours: selectedDateTime.hour,
+                    minutes: selectedDateTime.minute,
+                  ),
+                  onTimerDurationChanged: (Duration newTime) {
+                    setState(() {
+                      selectedDateTime = DateTime(
+                        selectedDateTime.year,
+                        selectedDateTime.month,
+                        selectedDateTime.day,
+                        newTime.inHours,
+                        newTime.inMinutes % 60,
+                      );
+                    });
+                  },
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text('Done'),
+              ),
+            ],
+          ),
         );
-      });
-    }
+      },
+    );
   }
 
   @override
@@ -155,7 +217,9 @@ class _AddTaskPageState extends State<AddTaskPage> {
                 onPressed: _saveTask,
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: 16.0),
-                  textStyle: TextStyle(fontSize: 18),
+                  textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                  backgroundColor: Colors.orange,
+                  foregroundColor: Colors.white,
                 ),
                 child: Text('Save Task'),
               ),
