@@ -1,9 +1,11 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
 
 import '../models/task.dart';
+import '../widgets/date_picker_widget.dart';
+import '../widgets/time_picker_widget.dart';
 
 class AddTaskPage extends StatefulWidget {
   final Box<Task> taskBox;
@@ -20,7 +22,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
 
   // Save task
   void _saveTask() {
-    if (_taskController.text.isEmpty) {
+    if (_taskController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Please enter a task name')),
       );
@@ -30,10 +32,13 @@ class _AddTaskPageState extends State<AddTaskPage> {
     final newTask = Task(
       name: _taskController.text,
       time: selectedDateTime,
-      isCompleted: false,
     );
 
     widget.taskBox.add(newTask);
+
+    Fluttertoast.showToast(
+      msg: 'Task "${newTask.name}" was added"',
+    );
     Navigator.of(context).pop();
   }
 
@@ -42,45 +47,19 @@ class _AddTaskPageState extends State<AddTaskPage> {
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
-        return Container(
-          height: 300,
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  'Select Date',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: CupertinoDatePicker(
-                  initialDateTime: selectedDateTime,
-                  mode: CupertinoDatePickerMode.date,
-                  onDateTimeChanged: (DateTime newDate) {
-                    setState(() {
-                      selectedDateTime = DateTime(
-                        newDate.year,
-                        newDate.month,
-                        newDate.day,
-                        selectedDateTime.hour,
-                        selectedDateTime.minute,
-                      );
-                    });
-                  },
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: Text('Done'),
-              ),
-            ],
-          ),
+        return DatePickerWidget(
+          initialDate: selectedDateTime,
+          onDateChanged: (newDate) {
+            setState(() {
+              selectedDateTime = DateTime(
+                newDate.year,
+                newDate.month,
+                newDate.day,
+                selectedDateTime.hour,
+                selectedDateTime.minute,
+              );
+            });
+          },
         );
       },
     );
@@ -91,48 +70,13 @@ class _AddTaskPageState extends State<AddTaskPage> {
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
-        return Container(
-          height: 250,
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  'Select Time',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: CupertinoTimerPicker(
-                  mode: CupertinoTimerPickerMode.hm,
-                  initialTimerDuration: Duration(
-                    hours: selectedDateTime.hour,
-                    minutes: selectedDateTime.minute,
-                  ),
-                  onTimerDurationChanged: (Duration newTime) {
-                    setState(() {
-                      selectedDateTime = DateTime(
-                          selectedDateTime.year,
-                          selectedDateTime.month,
-                          selectedDateTime.day,
-                          newTime.inHours,
-                          newTime.inMinutes % 60,
-                          0);
-                    });
-                  },
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: Text('Done'),
-              ),
-            ],
-          ),
+        return TimePickerWidget(
+          initialTime: selectedDateTime,
+          onTimeChanged: (newTime) {
+            setState(() {
+              selectedDateTime = newTime;
+            });
+          },
         );
       },
     );

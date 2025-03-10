@@ -4,6 +4,7 @@ Simple ToDo app
 To launch
 - Launch emulator or connect device
 - cd .\minimal_todo_app\
+- flutter pub get
 - flutter run
 
 Instructions
