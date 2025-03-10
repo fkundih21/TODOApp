@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
+
 import '../models/task.dart';
 
 class AddTaskPage extends StatefulWidget {
@@ -36,7 +37,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
     Navigator.of(context).pop();
   }
 
-    // Datepicker
+  // Datepicker
   void _selectDate() {
     showModalBottomSheet(
       context: context,
@@ -114,12 +115,12 @@ class _AddTaskPageState extends State<AddTaskPage> {
                   onTimerDurationChanged: (Duration newTime) {
                     setState(() {
                       selectedDateTime = DateTime(
-                        selectedDateTime.year,
-                        selectedDateTime.month,
-                        selectedDateTime.day,
-                        newTime.inHours,
-                        newTime.inMinutes % 60,
-                      );
+                          selectedDateTime.year,
+                          selectedDateTime.month,
+                          selectedDateTime.day,
+                          newTime.inHours,
+                          newTime.inMinutes % 60,
+                          0);
                     });
                   },
                 ),
@@ -173,7 +174,8 @@ class _AddTaskPageState extends State<AddTaskPage> {
                         padding: const EdgeInsets.symmetric(vertical: 12.0),
                         child: Text(
                           dateFormat.format(selectedDateTime),
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.w500),
                         ),
                       ),
                     ),
@@ -198,7 +200,8 @@ class _AddTaskPageState extends State<AddTaskPage> {
                         padding: const EdgeInsets.symmetric(vertical: 12.0),
                         child: Text(
                           timeFormat.format(selectedDateTime),
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.w500),
                         ),
                       ),
                     ),
@@ -217,7 +220,8 @@ class _AddTaskPageState extends State<AddTaskPage> {
                 onPressed: _saveTask,
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: 16.0),
-                  textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                  textStyle:
+                      TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                   backgroundColor: Colors.orange,
                   foregroundColor: Colors.white,
                 ),

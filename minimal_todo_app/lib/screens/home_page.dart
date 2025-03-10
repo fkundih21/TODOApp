@@ -408,7 +408,7 @@ class _HomePageState extends State<HomePage> {
           displayOnForeground: true,
           displayOnBackground: true,
         ),
-        schedule: NotificationCalendar.fromDate(date: task.time),
+        schedule: NotificationCalendar.fromDate(date: task.time, allowWhileIdle: true),
       );
     } else {
       AwesomeNotifications().cancel(task.key);
