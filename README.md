@@ -1,5 +1,5 @@
 Simple ToDo app
-- Tested and devloped for an android device mainly
+- Tested and developed for an android device mainly
 
 To launch
 - Launch emulator or connect device

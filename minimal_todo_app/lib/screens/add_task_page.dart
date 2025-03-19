@@ -3,7 +3,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
 
-import '../models/task.dart';
+import '../models/task_model.dart';
 import '../widgets/date_picker_widget.dart';
 import '../widgets/time_picker_widget.dart';
 
@@ -31,7 +31,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
 
     final newTask = Task(
       name: _taskController.text,
-      time: selectedDateTime,
+      time: selectedDateTime, id: 1, isCompleted: false, hasReminder: false,
     );
 
     widget.taskBox.add(newTask);
@@ -89,7 +89,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Add a Task'),
+        title: Text('New Task'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

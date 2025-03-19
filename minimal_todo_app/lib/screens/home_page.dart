@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 
-import '../models/task.dart';
+import '../models/task_model.dart';
+import '../services/api_service.dart';
 import '../utils/date_utils.dart';
 import '../utils/notification_utils.dart';
 import '../widgets/delete_confirmation_dialog.dart';
-import 'add_task_page.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -15,14 +14,46 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late Box<Task> taskBox;
+  final ApiService apiService = ApiService();
   DateTime selectedDate = DateTime.now();
+  List<Task> tasks = [];
+  String token = "...";
 
   @override
   void initState() {
     super.initState();
-    taskBox = Hive.box<Task>('tasksBox');
     requestNotificationPermission();
+    fetchTasks();
+  }
+
+  Future<void> fetchTasks() async {
+    try {
+      List<Task> fetchedTasks = await apiService.fetchTasks(token);
+      setState(() {
+        tasks = fetchedTasks;
+      });
+    } catch (e) {
+      Fluttertoast.showToast(msg: "Failed");
+      print(e);
+    }
+  }
+
+  Future<void> deleteTask(int id) async {
+    bool success = await apiService.deleteTask(id, token);
+    if (success) {
+      setState(() {
+        tasks.removeWhere((task) => task.id == id);
+      });
+      Fluttertoast.showToast(msg: "Task deleted.");
+    } else {
+      Fluttertoast.showToast(msg: "Failed to delete task.");
+    }
+  }
+
+  Future<void> updateTaskCompletion(Task task, bool isCompleted) async {
+    task.isCompleted = isCompleted;
+    await apiService.updateTask(task, token);
+    setState(() {});
   }
 
   @override
@@ -60,31 +91,26 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      body: Container(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            _buildDatePicker(dateList),
-            _buildTaskCounterWithProgress(),
-            _buildTaskList(),
-          ],
-        ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          _buildDatePicker(dateList),
+          _buildTaskCounterWithProgress(),
+          _buildTaskList(),
+        ],
       ),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 15, right: 15),
-        child: FloatingActionButton(
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => AddTaskPage(taskBox: taskBox),
-              ),
-            );
-          },
-          backgroundColor: Colors.orange,
-          child:
-              Icon(Icons.playlist_add_rounded, color: Colors.white, size: 40),
-        ),
-      ),
+      /* floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          bool? newTaskAdded = await Navigator.of(context).push(
+            MaterialPageRoute(builder: (context) => AddTaskPage(taskBox: tasks,)),
+          );
+          if (newTaskAdded == true) {
+            fetchTasks();
+          }
+        },
+        backgroundColor: Colors.orange,
+        child: Icon(Icons.playlist_add_rounded, color: Colors.white, size: 40),
+      ), */
       floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
     );
   }
@@ -172,97 +198,85 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Task counter with progress bar
   Widget _buildTaskCounterWithProgress() {
-    return ValueListenableBuilder(
-      valueListenable: taskBox.listenable(),
-      builder: (context, Box<Task> box, _) {
-        var tasksForSelectedDate = box.values.where((task) {
-          return task.time.day == selectedDate.day &&
-              task.time.month == selectedDate.month &&
-              task.time.year == selectedDate.year;
-        }).toList();
+    var tasksForSelectedDate = tasks
+        .where((task) =>
+            task.time.day == selectedDate.day &&
+            task.time.month == selectedDate.month &&
+            task.time.year == selectedDate.year)
+        .toList();
 
-        int totalTasks = tasksForSelectedDate.length;
-        int completedTasks =
-            tasksForSelectedDate.where((task) => task.isCompleted).length;
+    int totalTasks = tasksForSelectedDate.length;
+    int completedTasks =
+        tasksForSelectedDate.where((task) => task.isCompleted).length;
 
-        double progress = totalTasks > 0 ? completedTasks / totalTasks : 0;
-        Color counterColor = completedTasks == totalTasks
-            ? Color(0xFF0C5701)
-            : Color(0xFF9A1313);
+    double progress = totalTasks > 0 ? completedTasks / totalTasks : 0;
+    Color counterColor =
+        completedTasks == totalTasks ? Color(0xFF0C5701) : Color(0xFF9A1313);
 
-        if (totalTasks == 0) return SizedBox();
+    if (totalTasks == 0) return SizedBox();
 
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 30),
-          child: Row(
-            children: [
-              // Progress bar
-              Expanded(
-                flex: 8,
-                child: LinearProgressIndicator(
-                  value: progress,
-                  color: Colors.orange,
-                  backgroundColor: Colors.grey.shade300,
-                  minHeight: 6,
-                ),
-              ),
-              SizedBox(width: 10),
-              // Task counter
-              Expanded(
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    '$completedTasks/$totalTasks',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: counterColor,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 30),
+      child: Row(
+        children: [
+          //Progress bar
+          Expanded(
+            flex: 8,
+            child: LinearProgressIndicator(
+              value: progress,
+              color: Colors.orange,
+              backgroundColor: Colors.grey.shade300,
+              minHeight: 6,
+            ),
           ),
-        );
-      },
+          SizedBox(width: 10),
+          // Task counter
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                '$completedTasks/$totalTasks',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: counterColor,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  // Task list
   Widget _buildTaskList() {
+    var tasksForSelectedDate = tasks
+        .where((task) =>
+            task.time.day == selectedDate.day &&
+            task.time.month == selectedDate.month &&
+            task.time.year == selectedDate.year)
+        .toList();
+
+    if (tasksForSelectedDate.isEmpty) {
+      return Expanded(child: Center(child: Text('No tasks for this day!')));
+    }
+
     return Expanded(
-      child: ValueListenableBuilder(
-        valueListenable: taskBox.listenable(),
-        builder: (context, Box<Task> box, _) {
-          var tasksForSelectedDate = box.values.where((task) {
-            return task.time.day == selectedDate.day &&
-                task.time.month == selectedDate.month &&
-                task.time.year == selectedDate.year;
-          }).toList();
-
-          if (tasksForSelectedDate.isEmpty) {
-            return Center(child: Text('No tasks for this day!'));
-          }
-
-          return ListView.builder(
-            padding: EdgeInsets.only(bottom: 75.0),
-            itemCount: tasksForSelectedDate.length,
-            itemBuilder: (context, index) {
-              var task = tasksForSelectedDate[index];
-              return _buildTaskItem(task);
-            },
-          );
+      child: ListView.builder(
+        padding: EdgeInsets.only(bottom: 75.0),
+        itemCount: tasksForSelectedDate.length,
+        itemBuilder: (context, index) {
+          var task = tasksForSelectedDate[index];
+          return _buildTaskItem(task);
         },
       ),
     );
   }
 
-  // Task item
   Widget _buildTaskItem(Task task) {
     return Dismissible(
-      key: Key(task.key.toString()),
+      key: Key(task.id.toString()),
       direction: DismissDirection.endToStart,
       background: Container(
         color: Colors.red.shade900,
@@ -273,24 +287,13 @@ class _HomePageState extends State<HomePage> {
       confirmDismiss: (direction) async {
         return await showDeleteConfirmationDialog(context, task.name);
       },
-      onDismissed: (direction) {
-        taskBox.delete(task.key);
-        Fluttertoast.showToast(
-          msg: "Task '${task.name}' was deleted",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.BOTTOM,
-          backgroundColor: Colors.black54,
-          textColor: Colors.white,
-        );
-      },
+      onDismissed: (direction) => deleteTask(task.id),
       child: Column(
         children: [
           ListTile(
             title: Text(
               task.name,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
             subtitle: Text(
               '${task.time.hour}:${task.time.minute.toString().padLeft(2, '0')}',
@@ -303,24 +306,16 @@ class _HomePageState extends State<HomePage> {
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (task.hasNotification) Icon(Icons.notifications_active),
-                Theme(
-                  data: Theme.of(context).copyWith(
-                    unselectedWidgetColor: Colors.grey,
-                  ),
-                  child: Checkbox(
-                    value: task.isCompleted,
-                    onChanged: (bool? value) {
-                      setState(() {
-                        task.isCompleted = value ?? false;
-                        task.save();
-                      });
-                    },
-                    activeColor: Colors.orange,
-                    checkColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(7),
-                    ),
+                if (task.hasReminder) Icon(Icons.notifications_active),
+                Checkbox(
+                  value: task.isCompleted,
+                  onChanged: (bool? value) {
+                    updateTaskCompletion(task, value ?? false);
+                  },
+                  activeColor: Colors.orange,
+                  checkColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(7),
                   ),
                 ),
               ],

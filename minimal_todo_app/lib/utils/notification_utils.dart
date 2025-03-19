@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import '../models/task.dart';
+import '../models/task_model.dart';
 
 void requestNotificationPermission() async {
   bool isAllowed = await AwesomeNotifications().isNotificationAllowed();
@@ -11,15 +11,15 @@ void requestNotificationPermission() async {
   }
 }
 void handleTaskNotification(Task task, void Function(VoidCallback fn) updateState) {
-  if (!task.hasNotification) {
+  if (!task.hasReminder) {
     updateState(() {
-      task.hasNotification = true;
-      task.save();
+      task.hasReminder = true;
+      //task.save();
     });
     Fluttertoast.showToast(msg: "Notification for ${task.name} was created");
     AwesomeNotifications().createNotification(
       content: NotificationContent(
-        id: task.key,
+        id: task.id,
         channelKey: 'basic_channel',
         title: 'Reminder for ${task.name}',
         body: 'Your task is due now!',
@@ -32,11 +32,11 @@ void handleTaskNotification(Task task, void Function(VoidCallback fn) updateStat
       schedule: NotificationCalendar.fromDate(date: task.time, allowWhileIdle: true),
     );
   } else {
-    AwesomeNotifications().cancel(task.key);
+    AwesomeNotifications().cancel(task.id);
     Fluttertoast.showToast(msg: "Notification for ${task.name} was canceled");
     updateState(() {
-      task.hasNotification = false;
-      task.save();
+      task.hasReminder = false;
+      //task.save();
     });
   }
 }
