@@ -1,9 +1,12 @@
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
-import 'screens/home_page.dart';
+import 'package:minimal_todo_app/screens/login_screen.dart';
+import 'package:minimal_todo_app/services/auth_storage.dart';
+import 'screens/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  String? token = await AuthStorage.getToken();
 
   // Notifications
   AwesomeNotifications().initialize(
@@ -21,16 +24,18 @@ void main() async {
     ],
   );
 
-  runApp(MyApp());
-}
+  runApp(MyApp(initialScreen: token != null ? HomeScreen() : LoginScreen()));}
 
 class MyApp extends StatelessWidget {
+  final Widget initialScreen;
+  MyApp({required this.initialScreen});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Todo App',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: HomePage(),
+      home: initialScreen,
     );
   }
 }

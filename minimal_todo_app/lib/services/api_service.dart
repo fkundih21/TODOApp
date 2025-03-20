@@ -1,5 +1,7 @@
-import 'package:http/http.dart' as http;
 import 'dart:convert';
+
+import 'package:http/http.dart' as http;
+
 import '../models/task_model.dart';
 
 class ApiService {
@@ -18,7 +20,8 @@ class ApiService {
       List<Task> tasks = tasksJson.map((item) => Task.fromJson(item)).toList();
       return tasks;
     } else {
-      throw Exception('Failed to load tasks. Status code: ${response.statusCode}');
+      throw Exception(
+          'Failed to load tasks. Status code: ${response.statusCode}');
     }
   }
 
@@ -35,7 +38,8 @@ class ApiService {
     if (response.statusCode == 201) {
       return Task.fromJson(jsonDecode(response.body));
     } else {
-      throw Exception('Failed to add task. Status code: ${response.statusCode}');
+      throw Exception(
+          'Failed to add task. Status code: ${response.statusCode}');
     }
   }
 
@@ -52,11 +56,12 @@ class ApiService {
     if (response.statusCode == 200) {
       return Task.fromJson(jsonDecode(response.body));
     } else {
-      throw Exception('Failed to update task. Status code: ${response.statusCode}');
+      throw Exception(
+          'Failed to update task. Status code: ${response.statusCode}');
     }
   }
 
-  //DELETE existing task
+  //DELETE Existing task
   Future<bool> deleteTask(int id, String token) async {
     final url = Uri.parse('$baseUrl/tasks/$id');
     final response = await http.delete(url, headers: {
@@ -67,7 +72,58 @@ class ApiService {
     if (response.statusCode == 200) {
       return true;
     } else {
-      throw Exception('Failed to delete task. Status code: ${response.statusCode}');
+      throw Exception(
+          'Failed to delete task. Status code: ${response.statusCode}');
+    }
+  }
+
+  //POST Register new user
+  Future<Map<String, dynamic>?> registerUser(
+      String name, String email, String password) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/register"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"name": name, "email": email, "password": password}),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception(
+          'Failed to register user. Status code: ${response.statusCode}');
+    }
+  }
+
+  // POST Login user
+  Future<Map<String, dynamic>?> loginUser(String email, String password) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/login"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"email": email, "password": password}),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception(
+          'Failed to login user. Status code: ${response.statusCode}');
+    }
+  }
+
+  // POST Logout user
+  Future<bool> logoutUser(String token) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/logout"),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      throw Exception('Failed to logout. Status code: ${response.statusCode}');
     }
   }
 }

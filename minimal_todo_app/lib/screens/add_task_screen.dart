@@ -7,16 +7,16 @@ import '../models/task_model.dart';
 import '../widgets/date_picker_widget.dart';
 import '../widgets/time_picker_widget.dart';
 
-class AddTaskPage extends StatefulWidget {
+class AddTaskScreen extends StatefulWidget {
   final Box<Task> taskBox;
 
-  AddTaskPage({required this.taskBox});
+  AddTaskScreen({required this.taskBox});
 
   @override
-  _AddTaskPageState createState() => _AddTaskPageState();
+  _AddTaskScreenState createState() => _AddTaskScreenState();
 }
 
-class _AddTaskPageState extends State<AddTaskPage> {
+class _AddTaskScreenState extends State<AddTaskScreen> {
   final TextEditingController _taskController = TextEditingController();
   DateTime selectedDateTime = DateTime.now();
 

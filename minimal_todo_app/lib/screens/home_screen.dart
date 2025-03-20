@@ -4,16 +4,18 @@ import 'package:fluttertoast/fluttertoast.dart';
 
 import '../models/task_model.dart';
 import '../services/api_service.dart';
+import '../services/auth_storage.dart';
 import '../utils/date_utils.dart';
 import '../utils/notification_utils.dart';
 import '../widgets/delete_confirmation_dialog.dart';
+import 'login_screen.dart';
 
-class HomePage extends StatefulWidget {
+class HomeScreen extends StatefulWidget {
   @override
-  _HomePageState createState() => _HomePageState();
+  _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomeScreenState extends State<HomeScreen> {
   final ApiService apiService = ApiService();
   DateTime selectedDate = DateTime.now();
   List<Task> tasks = [];
@@ -56,6 +58,19 @@ class _HomePageState extends State<HomePage> {
     setState(() {});
   }
 
+  void logout() async {
+    String? token = await AuthStorage.getToken();
+    if (token != null) {
+      await ApiService().logoutUser(token);
+      await AuthStorage.removeToken();
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => LoginScreen()),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     List<DateTime> dateList = generateDateList();
@@ -87,7 +102,7 @@ class _HomePageState extends State<HomePage> {
         actions: [
           IconButton(
             icon: Icon(Icons.person),
-            onPressed: () {},
+            onPressed: logout,
           ),
         ],
       ),
