@@ -8,7 +8,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   String? token = await AuthStorage.getToken();
 
-  // Notifications
+  // Notification initialization
   AwesomeNotifications().initialize(
     'resource://drawable/res_app_icon',
     [

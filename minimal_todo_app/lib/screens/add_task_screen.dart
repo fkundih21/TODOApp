@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
 
 import '../models/task_model.dart';
+import '../services/api_service.dart';
+import '../services/auth_storage.dart';
 import '../widgets/date_picker_widget.dart';
 import '../widgets/time_picker_widget.dart';
 
 class AddTaskScreen extends StatefulWidget {
-  final Box<Task> taskBox;
-
-  AddTaskScreen({required this.taskBox});
-
   @override
   _AddTaskScreenState createState() => _AddTaskScreenState();
 }
@@ -19,9 +16,10 @@ class AddTaskScreen extends StatefulWidget {
 class _AddTaskScreenState extends State<AddTaskScreen> {
   final TextEditingController _taskController = TextEditingController();
   DateTime selectedDateTime = DateTime.now();
+  final ApiService _apiService = ApiService();
+  bool isLoading = false;
 
-  // Save task
-  void _saveTask() {
+  Future<void> _saveTask() async {
     if (_taskController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Please enter a task name')),
@@ -29,20 +27,34 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       return;
     }
 
-    final newTask = Task(
+    setState(() => isLoading = true);
+
+    String? token = await AuthStorage.getToken();
+    if (token == null) {
+      Fluttertoast.showToast(msg: 'User is not authenticated.');
+      setState(() => isLoading = false);
+      return;
+    }
+
+    Task newTask = Task(
+      id: 0,
       name: _taskController.text,
-      time: selectedDateTime, id: 1, isCompleted: false, hasReminder: false,
+      time: selectedDateTime,
+      isCompleted: false,
+      hasReminder: false,
     );
 
-    widget.taskBox.add(newTask);
-
-    Fluttertoast.showToast(
-      msg: 'Task "${newTask.name}" was added"',
-    );
-    Navigator.of(context).pop();
+    try {
+      await _apiService.addTask(newTask, token);
+      Fluttertoast.showToast(msg: 'Task added successfully!');
+      Navigator.of(context).pop(true);
+    } catch (error) {
+      Fluttertoast.showToast(msg: 'Error: ${error.toString()}');
+    } finally {
+      setState(() => isLoading = false);
+    }
   }
 
-  // Datepicker
   void _selectDate() {
     showModalBottomSheet(
       context: context,
@@ -65,7 +77,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     );
   }
 
-  // Timepicker
   void _selectTime() {
     showModalBottomSheet(
       context: context,
@@ -88,9 +99,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     final dateFormat = DateFormat('dd/MM/yyyy');
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('New Task'),
-      ),
+      appBar: AppBar(title: Text('New Task')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
@@ -106,8 +115,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 style: TextStyle(fontSize: 18),
               ),
               SizedBox(height: 20),
-
-              // Date Picker
               Row(
                 children: [
                   Text('Date: ', style: TextStyle(fontSize: 18)),
@@ -127,13 +134,10 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   IconButton(
                     onPressed: _selectDate,
                     icon: Icon(Icons.calendar_today),
-                    iconSize: 24,
                   ),
                 ],
               ),
               SizedBox(height: 16),
-
-              // Time Picker
               Row(
                 children: [
                   Text('Time: ', style: TextStyle(fontSize: 18)),
@@ -153,15 +157,12 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   IconButton(
                     onPressed: _selectTime,
                     icon: Icon(Icons.access_time),
-                    iconSize: 24,
                   ),
                 ],
               ),
               SizedBox(height: 32),
-
-              // Save Button
               ElevatedButton(
-                onPressed: _saveTask,
+                onPressed: isLoading ? null : _saveTask,
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: 16.0),
                   textStyle:
@@ -169,7 +170,9 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   backgroundColor: Colors.orange,
                   foregroundColor: Colors.white,
                 ),
-                child: Text('Save Task'),
+                child: isLoading
+                    ? CircularProgressIndicator(color: Colors.white)
+                    : Text('Save Task'),
               ),
             ],
           ),

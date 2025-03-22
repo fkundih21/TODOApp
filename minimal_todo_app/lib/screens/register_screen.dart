@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../services/api_service.dart';
 import '../services/auth_storage.dart';
 import 'home_screen.dart';
@@ -15,13 +16,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final ApiService apiService = ApiService();
   bool isLoading = false;
 
+  //Registers new user
   void register() async {
     setState(() => isLoading = true);
     try {
       final response = await apiService.registerUser(
-        nameController.text,
-        emailController.text,
-        passwordController.text,
+        nameController.text.trim(),
+        emailController.text.trim(),
+        passwordController.text.trim(),
       );
 
       if (response != null) {
@@ -41,66 +43,52 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
+  @override
+  void dispose() {
+    nameController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
-
     return Scaffold(
       appBar: AppBar(
-        title: Text('Register'),
+        title: const Text('Register'),
         centerTitle: true,
       ),
       body: Center(
         child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
+              const Text(
                 "Create an Account",
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
-              SizedBox(height: 20),
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(
-                  labelText: 'Name',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              SizedBox(height: 16),
-              TextField(
-                controller: emailController,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              SizedBox(height: 16),
-              TextField(
-                controller: passwordController,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  border: OutlineInputBorder(),
-                ),
-                obscureText: true,
-              ),
-              SizedBox(height: 24),
+              const SizedBox(height: 20),
+              _buildTextField(nameController, "Name"),
+              const SizedBox(height: 16),
+              _buildTextField(emailController, "Email"),
+              const SizedBox(height: 16),
+              _buildTextField(passwordController, "Password", isPassword: true),
+              const SizedBox(height: 24),
               isLoading
-                  ? CircularProgressIndicator()
+                  ? const CircularProgressIndicator()
                   : SizedBox(
-                width: screenWidth * 0.8,
+                width: double.infinity,
                 child: ElevatedButton(
                   onPressed: register,
                   style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(vertical: 14),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                     backgroundColor: Colors.deepOrangeAccent,
                   ),
-                  child: Text(
+                  child: const Text(
                     'Register',
                     style: TextStyle(fontSize: 16, color: Colors.white),
                   ),
@@ -109,6 +97,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+
+  Widget _buildTextField(TextEditingController controller, String label,
+      {bool isPassword = false}) {
+    return TextField(
+      controller: controller,
+      obscureText: isPassword,
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
       ),
     );
   }

@@ -10,10 +10,7 @@ class ApiService {
   // GET All tasks
   Future<List<Task>> fetchTasks(String token) async {
     final url = Uri.parse('$baseUrl/tasks');
-    final response = await http.get(url, headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token',
-    });
+    final response = await http.get(url, headers: _getHeadersWithToken(token));
 
     if (response.statusCode == 200) {
       List<dynamic> tasksJson = jsonDecode(response.body);
@@ -29,10 +26,7 @@ class ApiService {
   Future<Task> addTask(Task task, String token) async {
     final url = Uri.parse('$baseUrl/tasks');
     final response = await http.post(url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
+        headers: _getHeadersWithToken(token),
         body: jsonEncode(task.toJson()));
 
     if (response.statusCode == 201) {
@@ -47,10 +41,7 @@ class ApiService {
   Future<Task> updateTask(Task task, String token) async {
     final url = Uri.parse('$baseUrl/tasks/${task.id}');
     final response = await http.put(url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
+        headers: _getHeadersWithToken(token),
         body: jsonEncode(task.toJson()));
 
     if (response.statusCode == 200) {
@@ -64,10 +55,7 @@ class ApiService {
   //DELETE Existing task
   Future<bool> deleteTask(int id, String token) async {
     final url = Uri.parse('$baseUrl/tasks/$id');
-    final response = await http.delete(url, headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token',
-    });
+    final response = await http.delete(url, headers: _getHeadersWithToken(token));
 
     if (response.statusCode == 200) {
       return true;
@@ -126,4 +114,28 @@ class ApiService {
       throw Exception('Failed to logout. Status code: ${response.statusCode}');
     }
   }
+
+  // GET All user tasks
+  Future<List<Task>> fetchUserTasks(String token) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/user'),
+      headers: _getHeadersWithToken(token),
+    );
+
+    if (response.statusCode == 200) {
+      List<dynamic> taskJson = jsonDecode(response.body);
+      return taskJson.map((json) => Task.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load user tasks');
+    }
+  }
+
+  /// HEADER WITH TOKEN SHORTCUT
+  Map<String, String> _getHeadersWithToken(String token) {
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+  }
+
 }
