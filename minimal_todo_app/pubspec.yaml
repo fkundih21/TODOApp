@@ -40,6 +40,7 @@ flutter:
     - assets/images/
     - assets/images/LogoApp.png
     - assets/images/Logo.png
+    - assets/images/bell.png
 
 flutter_launcher_icons:
   android: true

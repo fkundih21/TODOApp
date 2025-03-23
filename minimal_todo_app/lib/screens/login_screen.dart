@@ -16,19 +16,41 @@ class _LoginScreenState extends State<LoginScreen> {
   final ApiService apiService = ApiService();
   bool isLoading = false;
 
-  void login() async {
-    setState(() => isLoading = true);
-    try {
-      final response = await apiService.loginUser(
-        emailController.text,
-        passwordController.text,
-      );
+  bool isValidEmail(String email) {
+    return RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+        .hasMatch(email);
+  }
 
-      if (response != null) {
+  void login() async {
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Email and password cannot be empty.")),
+      );
+      return;
+    }
+    if (!isValidEmail(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Enter a valid email address.")),
+      );
+      return;
+    }
+    setState(() => isLoading = true);
+
+    try {
+      final response = await apiService.loginUser(email, password);
+
+      if (response != null && response.containsKey('token')) {
         await AuthStorage.saveToken(response['token']);
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => HomeScreen()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(response?['message'] ?? "Login failed.")),
         );
       }
     } catch (e) {

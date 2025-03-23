@@ -49,7 +49,7 @@ class TaskItem extends StatelessWidget {
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (task.hasReminder) Icon(Icons.notifications_active),
+                if (task.hasReminder) Image.asset('assets/images/bell.png', width: 30,),
                 Checkbox(
                   value: task.isCompleted,
                   onChanged: (bool? value) {

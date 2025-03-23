@@ -153,34 +153,37 @@ class _HomeScreenState extends State<HomeScreen> {
             child: tasksForSelectedDate.isEmpty
                 ? Center(child: Text('No tasks for this day!'))
                 : ListView.builder(
-                    padding: EdgeInsets.only(bottom: 75.0),
-                    itemCount: tasksForSelectedDate.length,
-                    itemBuilder: (context, index) {
-                      var task = tasksForSelectedDate[index];
-                      return TaskItem(
-                        task: task,
-                        onTaskCompletionChanged: updateTaskCompletion,
-                        onDeleteTask: deleteTask,
-                        onLongPressTask: (task) =>
-                            handleTaskNotification(task, setState),
-                      );
-                    },
-                  ),
+              padding: EdgeInsets.only(bottom: 75.0),
+              itemCount: tasksForSelectedDate.length,
+              itemBuilder: (context, index) {
+                var task = tasksForSelectedDate[index];
+                return TaskItem(
+                  task: task,
+                  onTaskCompletionChanged: updateTaskCompletion,
+                  onDeleteTask: deleteTask,
+                  onLongPressTask: (task) =>
+                      handleTaskNotification(task, setState),
+                );
+              },
+            ),
           ),
         ],
       ),
       //NEW TASK BUTTON
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          bool? newTaskAdded = await Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => AddTaskScreen()),
-          );
-          if (newTaskAdded == true) {
-            fetchTasks();
-          }
-        },
-        backgroundColor: Colors.orange,
-        child: Icon(Icons.playlist_add_rounded, color: Colors.white, size: 40),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: FloatingActionButton(
+          onPressed: () async {
+            bool? newTaskAdded = await Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => AddTaskScreen()),
+            );
+            if (newTaskAdded == true) {
+              fetchTasks();
+            }
+          },
+          backgroundColor: Colors.orange,
+          child: Icon(Icons.playlist_add_rounded, color: Colors.white, size: 40),
+        ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
     );

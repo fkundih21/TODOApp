@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 
 Future<bool?> showDeleteConfirmationDialog(BuildContext context, String name) {
   return showCupertinoDialog<bool>(

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-
+import 'package:minimal_todo_app/screens/home_screen.dart';
 import '../services/api_service.dart';
 import '../services/auth_storage.dart';
-import 'home_screen.dart';
+import '../widgets/text_field_input.dart';
 
 class RegisterScreen extends StatefulWidget {
   @override
@@ -16,22 +16,48 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final ApiService apiService = ApiService();
   bool isLoading = false;
 
-  //Registers new user
+  final RegExp emailRegex = RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
+
+
   void register() async {
+    final name = nameController.text.trim();
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+
+    if (name.isEmpty || email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Please fill in all fields")),
+      );
+      return;
+    }
+
+    if (!emailRegex.hasMatch(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Enter a valid email address")),
+      );
+      return;
+    }
+
+    if (password.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Password must be at least 6 characters long")),
+      );
+      return;
+    }
+
     setState(() => isLoading = true);
     try {
-      final response = await apiService.registerUser(
-        nameController.text.trim(),
-        emailController.text.trim(),
-        passwordController.text.trim(),
-      );
-
-      if (response != null) {
+      final response = await apiService.registerUser(name, email, password);
+      if (response != null && response.containsKey('token')) {
         await AuthStorage.saveToken(response['token']);
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => HomeScreen()),
               (route) => false,
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(response?['message'] ?? "Registration failed")),
         );
       }
     } catch (e) {
@@ -69,11 +95,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
-              _buildTextField(nameController, "Name"),
+              TextFieldInput(nameController, "Name"),
               const SizedBox(height: 16),
-              _buildTextField(emailController, "Email"),
+              TextFieldInput(emailController, "Email"),
               const SizedBox(height: 16),
-              _buildTextField(passwordController, "Password", isPassword: true),
+              TextFieldInput(passwordController, "Password", isPassword: true),
               const SizedBox(height: 24),
               isLoading
                   ? const CircularProgressIndicator()
@@ -97,19 +123,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-
-  Widget _buildTextField(TextEditingController controller, String label,
-      {bool isPassword = false}) {
-    return TextField(
-      controller: controller,
-      obscureText: isPassword,
-      decoration: InputDecoration(
-        labelText: label,
-        border: const OutlineInputBorder(),
       ),
     );
   }

@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import '../models/task_model.dart';
 
 class ApiService {
-  static const String baseUrl = "http://...:8000/api";
+  static const String baseUrl = "http://192.168.1.154:8000/api";
 
   // GET All tasks
   Future<List<Task>> fetchTasks(String token) async {
@@ -102,10 +102,7 @@ class ApiService {
   Future<bool> logoutUser(String token) async {
     final response = await http.post(
       Uri.parse("$baseUrl/logout"),
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer $token",
-      },
+      headers: _getHeadersWithToken(token),
     );
 
     if (response.statusCode == 200) {
