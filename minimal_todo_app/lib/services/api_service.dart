@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import '../models/task_model.dart';
 
 class ApiService {
-  static const String baseUrl = "http://192.168.1.154:8000/api";
+  static const String baseUrl = "https://aa7a-2a00-c30-71ea-bcb0-7018-6dfc-7e7-103.ngrok-free.app/api";
 
   // GET All tasks
   Future<List<Task>> fetchTasks(String token) async {
